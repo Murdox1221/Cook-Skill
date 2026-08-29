@@ -1,0 +1,36 @@
+name: Package skill
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build meal-planner.zip
+        run: |
+          rm -rf dist
+          mkdir -p dist/meal-planner/plans
+          cp -r SKILL.md README.md references templates dist/meal-planner/
+          touch dist/meal-planner/plans/.gitkeep
+          (cd dist && zip -r ../meal-planner.zip meal-planner)
+          unzip -l meal-planner.zip
+
+      - name: Publish to rolling "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          body: >-
+            Auto-built from the newest commit on `main`
+            (${{ github.sha }}). Download `meal-planner.zip` below, unzip, and
+            move the `meal-planner/` folder into `~/.claude/skills/`.
+          files: meal-planner.zip
+          make_latest: true
